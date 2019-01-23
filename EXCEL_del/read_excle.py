@@ -3,7 +3,6 @@ import pandas as pd
 import EXCEL_del.GetEqualRate as Rate
 import EXCEL_del.DB as DB
 
-
 class ReadTwoExcel:
     def __init__(self, excel_path, excel_path1, sheet, sheet1, col_name1, col_sql):
         self.excel_path = excel_path
@@ -14,21 +13,21 @@ class ReadTwoExcel:
         self.col_sql = col_sql
 
     # 读取表中第一行的值
-    def read_cow(self):
-        # excel_path = r"委预算\2018-11-23 (24号文件)XX医院-数据质量调整进度.xlsx"
-        workbook = xlrd.open_workbook(self.excel_path)
-        worksheet = workbook.sheet_by_name(self.sheet)
-        num_cols = worksheet.ncols
+    def read_cow(self,excel_path,sheet,num):
+        workbook = xlrd.open_workbook(excel_path)
+        worksheet = workbook.sheet_by_name(sheet)
+        # num_cols = worksheet.ncols
         firstrow_data = []
-        col = worksheet.col_values(1)
+        col = worksheet.col_values(num)
         for curr_col in range(len(col)):
             if len(col[curr_col]):
-                firstrow_data.append(col[curr_col])
+                firstrow_data.append(col[curr_col].strip())
         return firstrow_data
 
     # pandas读取Excel
     def readExcel(self, epath, sname):
-        return pd.read_excel(epath, sheet_name=sname)
+        df = pd.read_excel(epath, sheet_name=sname)
+        return df
 
     # 处理第一张表的关键字段
     def GetKeyCode(self, firstrow_data, d):
@@ -44,7 +43,6 @@ class ReadTwoExcel:
 
     # 读取表中第一列的值
     def read_col(self, key):
-        # excel_path1 = r"委预算\各表数据指标抽检.xlsx"
         workbook1 = xlrd.open_workbook(self.excel_path1)
         worksheet1 = workbook1.sheet_by_name(self.sheet1)
         num_rows = worksheet1.nrows
