@@ -13,38 +13,39 @@ a = RE.read_cow(excel_path,sheet,0)
 # print(a)
 b = RE.read_cow(excel_path1,sheet1,3)
 # print(b)
-c = []
+c = dict()
 for a_ in a:
     for b_ in b:
         # print(b_.find(a_))
         if b_.find(a_)>0:
-            c.append(b_)
-d = [i for i in set(c)]
-# print(d[0])
+            c[a_] = b_
+print(c)
+
 df = RE.readExcel(excel_path1,sheet1)
 pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=a[0])
-# print(pv1.head(20))
-# print(pv1.ix[d[0]])
+# print(pv1.loc['ABX-阿坝县'])
+d=dict()
+for k in c.keys():
+    d[k]=pv1.ix[c[k]]
+# print(d)
+s = pd.DataFrame.from_dict(d,orient='index')
+s = s.sort_values('就诊人次',ascending=False)
+s_ = s.reset_index()
+print(s_)
+
+
 
 # df = RE.readExcel(r"excels\2018年季度门诊.xlsx",u'统计结果')
 # print(df)
-import xlrd
-excel_path3=r'excels\统计结果表.xls'
-sheet3 = r'Sheet1'
+# import xlrd
+# excel_path3=r'excels\统计结果表格式参照.xlsx'
+# sheet3 = r'Sheet1'
 # book = xlrd.open_workbook(excel_path3)#打开一个excel
 # # sheet = book.sheet_by_index(0)#根据顺序获取sheet
 # sheet = book.sheet_by_name(sheet3)#根据sheet页名字获取sheet
 # print(sheet.cell(0,0).value)#指定行和列获取数据
 
-from xlutils.copy import copy
-#xlutils:修改excel
-book1 = xlrd.open_workbook(excel_path3)
-book2 = copy(book1)#拷贝一份原来的excel
-# print(dir(book2))
-sheet = book2.get_sheet(0)#获取第几个sheet页，book2现在的是xlutils里的方法，不是xlrd的
-sheet.write(0,0,sheet1)
-sheet.write(1,0,'hello')
-book2.save(excel_path3)
+
 
 # 获取与第二张表的对应关系
 # zidian = RE.zidian("门诊诊疗费用明细记录关联门诊费用")
