@@ -5,10 +5,8 @@ excel_path = r"excels\规则.xlsx"
 excel_path1 = r"excels\病人来源201810-12.xlsx"
 sheet =u'成都市'
 sheet1 =u'门诊201810-12'
-col_name1 = '指标项'
-col_sql = '统计SQL'
 # 获取类对象
-RE = read_excle.ReadTwoExcel(excel_path, excel_path1, sheet, sheet1,col_name1,col_sql)
+RE = read_excle.ReadTwoExcel(excel_path, excel_path1, sheet, sheet1)
 a = RE.read_cow(excel_path,sheet,0)
 # print(a)
 b = RE.read_cow(excel_path1,sheet1,3)
@@ -19,19 +17,22 @@ for a_ in a:
         # print(b_.find(a_))
         if b_.find(a_)>0:
             c[a_] = b_
-print(c)
+# print(c)
 
 df = RE.readExcel(excel_path1,sheet1)
+print(df)
 pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=a[0])
 # print(pv1.loc['ABX-阿坝县'])
-d=dict()
+d = dict()
 for k in c.keys():
     d[k]=pv1.ix[c[k]]
 # print(d)
 s = pd.DataFrame.from_dict(d,orient='index')
 s = s.sort_values('就诊人次',ascending=False)
 s_ = s.reset_index()
-print(s_)
+# print(s_)
+
+# print('办卡地址区县'.find('办卡地址区县'))   输出 0
 
 
 

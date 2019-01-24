@@ -1,46 +1,49 @@
 import pandas as pd
-import configparser
-import EXCEL_del.DB as DB
 import EXCEL_del.read_excle as read_excle
 if __name__ == '__main__':
     # 自定义路径
     excel_path = r"excels\规则.xlsx"
     excel_path1 = r"excels\病人来源201810-12.xlsx"
-    sheet = u'规则'
+    sheets = ['成都市','四川省异地','外省']
     sheet1 = u'门诊201810-12'
-    col_name1 = '指标项'
-    col_sql = '统计SQL'
-    years = ['2016', '2017', '2018']
-    # 获取类对象
-    RE = read_excle.ReadTwoExcel(excel_path, excel_path1, sheet, sheet1, col_name1, col_sql)
-    # 获取第一张表的第一行数据
-    firstrow_data = RE.read_cow()
-    d = RE.readExcel(excel_path, sheet)
-    # 处理第一张表的字段
-    KeyCodes = RE.GetKeyCode(firstrow_data, d)
-    # 获取与第二张表的对应关系
-    zidian = RE.zidian(KeyCodes)
-    # 处理字典，取值组成数组
-    arr = RE.arr(zidian)
-    # 得到sql数组
-    d1 = RE.readExcel(excel_path1, sheet1)
-    # 读配置文件
-    cf = configparser.ConfigParser()
-    cf.read("cof.conf", 'utf-8')
-    # 获取数据库对象
-    cursor = DB.connect(cf)
-    # 获取所有sqls语句
-    sqls = RE.get_sql_strs(d1,arr)
-
-    writer = pd.ExcelWriter("sqls.xlsx")
-    sqls.to_excel(writer, sheet_name="sheet1")
+    j = 3
+    col = 0
+    row = 2
+    writer = pd.ExcelWriter('统计结果表.xlsx')
+    # 获取数据源数据
+    df = pd.read_excel(excel_path1, sheet_name=sheet1)
+    total = sum(df['就诊人次'])
+    for sheet in sheets:
+        # 获取类对象
+        RE = read_excle.ReadTwoExcel(excel_path, sheet)
+        # 获取'规则表'中的数据
+        guizeData = RE.read_cow(excel_path, sheet, 0)
+        # 获取'数据源表中'的规则对应的数据,形成字典
+        ODate = RE.read_cow(excel_path1, sheet1, j)
+        zidian = dict()
+        for a_ in guizeData:
+            for b_ in ODate:
+                if b_.find(a_)>0:
+                    zidian[a_] = b_
+        pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=guizeData[0])
+        d = dict()
+        for k in zidian.keys():
+            d[k] = pv1.ix[zidian[k]]
+        result = pd.DataFrame.from_dict(d,orient='index')
+        result = result.sort_values('就诊人次',ascending=False)
+        # 各行数据总和求和并新增一行
+        result.loc['合计'] = result.apply(lambda x: x.sum())
+        result_ = result.reset_index()
+        result_.insert(0, '类别', sheet)
+        result_.to_excel(writer, sheet_name=sheet1, index=False, startrow=row, startcol=col)
+        col = col+4
+        j = j-1
+    a = "%s四川省门诊病人来源地汇总"%sheet1
+    b = "根据信息中心BI提供的数据，我院门诊就诊人次达%s人次，具体来源地如下:"%total
+    heard = pd.DataFrame({a: [b]})
+    heard.to_excel(writer,sheet_name=sheet1, index=False, startrow=0, startcol=0)
     writer.save()
 
-    # 获取第一个Excel关键字段
-    arr_k = RE.arr_k(zidian)
-    # 返回查询结果，并存储到新Excel
-    for year in years:
-        df_arr = RE.run_sql(sqls, zidian, year, cursor, arr_k, arr)
-        writer = pd.ExcelWriter(year + ".xlsx")
-        df_arr.to_excel(writer, sheet_name=year)
-        writer.save()
+# # 横向拼接DateFrame数据
+# results = pd.concat(results, axis=1, join_axes=[results[2].index])
+#

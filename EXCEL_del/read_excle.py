@@ -4,13 +4,9 @@ import EXCEL_del.GetEqualRate as Rate
 import EXCEL_del.DB as DB
 
 class ReadTwoExcel:
-    def __init__(self, excel_path, excel_path1, sheet, sheet1, col_name1, col_sql):
+    def __init__(self, excel_path, sheet):
         self.excel_path = excel_path
-        self.excel_path1 = excel_path1
         self.sheet = sheet
-        self.sheet1 = sheet1
-        self.col_name1 = col_name1
-        self.col_sql = col_sql
 
     # 读取表中第一行的值
     def read_cow(self,excel_path,sheet,num):
@@ -26,8 +22,8 @@ class ReadTwoExcel:
 
     # pandas读取Excel
     def readExcel(self, epath, sname):
-        df = pd.read_excel(epath, sheet_name=sname)
-        return df
+        return pd.read_excel(epath, sheet_name=sname)
+
 
     # 处理第一张表的关键字段
     def GetKeyCode(self, firstrow_data, d):
