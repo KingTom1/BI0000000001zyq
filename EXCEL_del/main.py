@@ -13,6 +13,7 @@ if __name__ == '__main__':
     # 获取数据源数据
     df = pd.read_excel(excel_path1, sheet_name=sheet1)
     total = sum(df['就诊人次'])
+    v_total = dict()
     for sheet in sheets:
         # 获取类对象
         RE = read_excle.ReadTwoExcel(excel_path, sheet)
@@ -31,6 +32,7 @@ if __name__ == '__main__':
             d[k] = pv1.ix[zidian[k]]
         result = pd.DataFrame.from_dict(d,orient='index')
         result = result.sort_values('就诊人次',ascending=False)
+        v_total[sheet]=sum(result['就诊人次'])
         # 各行数据总和求和并新增一行
         result.loc['合计'] = result.apply(lambda x: x.sum())
         result_ = result.reset_index()
@@ -42,6 +44,10 @@ if __name__ == '__main__':
     b = "根据信息中心BI提供的数据，我院门诊就诊人次达%s人次，具体来源地如下:"%total
     heard = pd.DataFrame({a: [b]})
     heard.to_excel(writer,sheet_name=sheet1, index=False, startrow=0, startcol=0)
+    v_total['不详/空']=total-v_total['成都市']-v_total['四川省异地']-v_total['外省']
+    v_total['合计'] = total
+    vv_total = pd.DataFrame.from_dict(v_total, orient='index')
+    vv_total.to_excel(writer,sheet_name=sheet1, startrow=row, startcol=12)
     writer.save()
 
 # # 横向拼接DateFrame数据
