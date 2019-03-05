@@ -1,37 +1,44 @@
 import EXCEL_del.read_excle as read_excle
 import pandas as pd
 # 自定义路径
-excel_path = r"excels\规则.xlsx"
-excel_path1 = r"excels\病人来源201810-12.xlsx"
-sheet =u'成都市'
-sheet1 =u'门诊201810-12'
-# 获取类对象
-RE = read_excle.ReadTwoExcel(excel_path, sheet)
-a = RE.read_cow(excel_path,sheet,0)
-# print(a)
-b = RE.read_cow(excel_path1,sheet1,3)
-# print(b)
-c = dict()
-for a_ in a:
-    for b_ in b:
-        # print(b_.find(a_))
-        if b_.find(a_)>0:
-            c[a_] = b_
-# print(c)
-
-df = RE.readExcel(excel_path1,sheet1)
-# print(df)
-pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=a[0])
-# print(pv1.loc['ABX-阿坝县'])
-d = dict()
-for k in c.keys():
-    d[k]=pv1.ix[c[k]]
-# print(d)
-s = pd.DataFrame.from_dict(d,orient='index')
-s = s.sort_values('就诊人次',ascending=False)
-total = sum(s['就诊人次'])
-s.loc['合计'] = s.apply(lambda x: x.sum())
-print(total)
+def Get_dict():
+    excel_path = r"excels\规则.xlsx"
+    excel_path1 = r"excels\病人来源201810-12.xlsx"
+    sheets =['CDS-成都市','SCS-四川省','外省']
+    sheet1 =u'门诊201810-12'
+    j = 3
+    # 获取类对象
+    arr = []
+    for sheet in sheets:
+        RE = read_excle.ReadTwoExcel(excel_path, sheet)
+        a = RE.read_cow(excel_path,sheet,0)
+        # print(a)
+        b = RE.read_cow(excel_path1,sheet1,j)
+        # print(b)
+        c = dict()
+        for a_ in a:
+            for b_ in b:
+                # print(b_.find(a_))
+                if b_.find(a_)>0:
+                    c[a_] = b_
+        arr.append(c)
+        j = j-1
+    return arr
+# a = Get_dict()
+# print(a[1])
+# df = RE.readExcel(excel_path1,sheet1)
+# # print(df)
+# pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=a[0])
+# # print(pv1.loc['ABX-阿坝县'])
+# d = dict()
+# for k in c.keys():
+#     d[k]=pv1.ix[c[k]]
+# # print(d)
+# s = pd.DataFrame.from_dict(d,orient='index')
+# s = s.sort_values('就诊人次',ascending=False)
+# total = sum(s['就诊人次'])
+# s.loc['合计'] = s.apply(lambda x: x.sum())
+# print(total)
 # s_ = s.reset_index()
 # print(s_)
 

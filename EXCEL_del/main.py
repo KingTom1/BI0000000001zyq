@@ -1,55 +1,50 @@
 import pandas as pd
+import EXCEL_del.test as t
 import EXCEL_del.read_excle as read_excle
 if __name__ == '__main__':
     # 自定义路径
     excel_path = r"excels\规则.xlsx"
-    excel_path1 = r"excels\病人来源201810-12.xlsx"
-    sheets = ['成都市','四川省异地','外省']
-    sheet1 = u'门诊201810-12'
-    j = 3
-    col = 0
-    row = 2
-    writer = pd.ExcelWriter('统计结果表.xlsx')
+    excel_path1 = r"excels\病人来源门诊统计2014-2018.xlsx"
+    sheets = ['CDS-成都市','SCS-四川省','外省']
+    sheet1 = u'Sheet1'
+    COL = 1
     # 获取数据源数据
     df = pd.read_excel(excel_path1, sheet_name=sheet1)
-    total = sum(df['就诊人次'])
-    v_total = dict()
-    for sheet in sheets:
-        # 获取类对象
-        RE = read_excle.ReadTwoExcel(excel_path, sheet)
-        # 获取'规则表'中的数据
-        guizeData = RE.read_cow(excel_path, sheet, 0)
-        # 获取'数据源表中'的规则对应的数据,形成字典
-        ODate = RE.read_cow(excel_path1, sheet1, j)
-        zidian = dict()
-        for a_ in guizeData:
-            for b_ in ODate:
-                if b_.find(a_)>0:
-                    zidian[a_] = b_
-        pv1 = pd.pivot_table(df,aggfunc='sum',values='就诊人次',index=guizeData[0])
-        d = dict()
-        for k in zidian.keys():
-            d[k] = pv1.ix[zidian[k]]
-        result = pd.DataFrame.from_dict(d,orient='index')
-        result = result.sort_values('就诊人次',ascending=False)
-        v_total[sheet]=sum(result['就诊人次'])
-        # 各行数据总和求和并新增一行
-        result.loc['合计'] = result.apply(lambda x: x.sum())
-        result_ = result.reset_index()
-        result_.insert(0, '类别', sheet)
-        result_.to_excel(writer, sheet_name=sheet1, index=False, startrow=row, startcol=col)
-        col = col+4
-        j = j-1
-    a = "%s四川省门诊病人来源地汇总"%sheet1
-    b = "根据信息中心BI提供的数据，我院门诊就诊人次达%s人次，具体来源地如下:"%total
-    heard = pd.DataFrame({a: [b]})
-    heard.to_excel(writer,sheet_name=sheet1, index=False, startrow=0, startcol=0)
-    v_total['不详/空']=total-v_total['成都市']-v_total['四川省异地']-v_total['外省']
-    v_total['合计'] = total
-    vv_total = pd.DataFrame.from_dict(v_total, orient='index')
-    vv_total.to_excel(writer,sheet_name=sheet1, startrow=row, startcol=12)
+    arr = t.Get_dict()
+    writer = pd.ExcelWriter("%s统计结果.xlsx" % excel_path1)
+    df_1 = df[df['办卡地址省']==sheets[1]]
+    df_2 = df_1[df_1['办卡地址市']==sheets[0]]
+    total_df2 = df_2.pivot_table(index='年',values='就诊人次',aggfunc='sum')
+    # print(total_df2)
+    result0= pd.DataFrame()
+    for arr_ in arr[0].values():
+        pv1 = df_2[df_2['办卡地址区县']==arr_]
+        result0 = pv1.append(result0)
+
+    total_result0 = result0.pivot_table(index='年', values='就诊人次', aggfunc='sum')
+    # print(total_result0)
+    new_df = total_df2-total_result0
+    for index,row in new_df.iterrows():
+        new = pd.DataFrame({"年": index, '办卡地址省': '四川省', '办卡地址市': "成都市", '办卡地址区县': '其他', '就诊人次': row})
+        result0 = result0.append(new,ignore_index=True)
+    print(result0)
+    pv_result = pd.pivot_table(result0,index=['年','办卡地址省','办卡地址市','办卡地址区县'],values='就诊人次',aggfunc='sum')
+    print(pv_result)
+    pv_result.to_excel(writer, sheet_name=sheet1, startrow=2, startcol=COL)
+
+    # COL = COL+6
+    # result1 = pd.DataFrame()
+    # for arr_ in arr[1].values():
+    #     pv1 = df_1[df_1['办卡地址市']==arr_]
+    #     result1 = pv1.append(result1)
+    # pv_result1 = pd.pivot_table(result1, index=['年', '办卡地址省', '办卡地址市'], values='就诊人次',aggfunc='sum')
+    # pv_result1.to_excel(writer, sheet_name=sheet1, startrow=2, startcol=COL)
+    # COL = COL + 5
+    # result2 = pd.DataFrame()
+    # for arr_ in arr[2].values():
+    #     pv1 = df[df['办卡地址省']==arr_]
+    #     result2 = pv1.append(result2)
+    # pv_result2 = pd.pivot_table(result2, index=['年', '办卡地址省'], values='就诊人次',aggfunc='sum')
+    # pv_result2.to_excel(writer, sheet_name=sheet1, startrow=2, startcol=COL)
     writer.save()
 
-# # 横向拼接DateFrame数据
-# results = pd.concat(results, axis=1, join_axes=[results[2].index])
-#
